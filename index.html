@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Luke Nukem 3D</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="game">
+    <canvas id="view" width="480" height="270"></canvas>
+    <canvas id="minimap" width="200" height="200"></canvas>
+    <div id="flash"></div>
+    <div id="crosshair"></div>
+    <div id="messages"></div>
+    <div id="leveltitle"></div>
+    <div id="quip"></div>
+    <div id="bossbar"><span>DARTH VADER</span><div class="track"><div id="bossfill"></div></div></div>
+
+    <div id="hud">
+      <div class="box"><div class="lbl">Health</div><div class="val" id="h-hp">100</div></div>
+      <div class="box"><div class="lbl">Shield</div><div class="val shield" id="h-sh">0</div></div>
+      <div class="box wide"><div class="lbl" id="h-wname">LIGHTSABER</div><div class="val" id="h-ammo">∞</div><div class="weps" id="h-weps"></div></div>
+      <div class="box"><div class="lbl">Force</div><div class="bar"><div id="h-force"></div></div></div>
+      <div class="box"><div class="lbl">Keys</div><div class="keys"><span id="k-red" class="key red"></span><span id="k-blue" class="key blue"></span></div></div>
+      <div class="box"><div class="lbl">Kills</div><div class="val small" id="h-kills">0/0</div></div>
+    </div>
+
+    <div id="screen-title" class="screen">
+      <div class="crawl-wrap">
+        <div class="crawl" id="title-crawl">
+          <p class="ep">Episode IV-D</p>
+          <p class="ep-title">A NUKE HOPE</p>
+          <p>It is a period of civil war. The evil Galactic Empire has seized the galaxy's entire supply of bantha-hide bubble gum and locked it aboard the dreaded DEATH STAR.</p>
+          <p>Only one hero is tough enough, loud enough and blond enough to take it back: LUKE NUKEM.</p>
+          <p>Armed with his father's lightsaber, a trusty blaster and a mouth that writes checks the Force has to cash, Luke has snuck aboard the battle station to kick ass and chew gum...</p>
+          <p>...and he's all out of gum.</p>
+        </div>
+      </div>
+      <div class="title-front">
+        <h1><span>LUKE</span><span>NUKEM</span><em>3D</em></h1>
+        <p class="tag">A long time ago, in a galaxy far, far away... someone had to kick some Imperial ass.</p>
+        <button class="start">Click to start</button>
+        <div class="controls">
+          <div><b>WASD</b> move · <b>Mouse</b> aim · <b>Shift</b> run</div>
+          <div><b>Click</b> fire · <b>Right-click / F</b> Force push</div>
+          <div><b>E / Space</b> use doors &amp; switches · <b>1-4 / wheel</b> weapons</div>
+          <div><b>Tab</b> map · <b>V</b> Luke's voice · <b>N</b> sound · <b>P</b> pause</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-pause" class="screen">
+      <div class="panel"><h2>Paused</h2><p>Click to resume</p></div>
+    </div>
+    <div id="screen-dead" class="screen dead">
+      <div class="panel"><h2>You got blasted</h2><p>Even Jedi have bad days. Click to try the mission again.</p></div>
+    </div>
+    <div id="screen-levelend" class="screen">
+      <div class="panel"><h2>Mission complete</h2><div id="end-stats"></div><p>Click to continue</p></div>
+    </div>
+    <div id="screen-victory" class="screen">
+      <div class="crawl-wrap">
+        <div class="crawl" id="victory-crawl">
+          <p class="ep-title">VICTORY</p>
+          <p>With Darth Vader defeated and the reactor core going critical, LUKE NUKEM strolls out of the Death Star moments before it becomes a very expensive fireworks display.</p>
+          <p>The galaxy's bubble gum has been liberated. Bantha everywhere rejoice.</p>
+          <p>But the Empire is not finished yet. Luke Nukem will return in...</p>
+          <p class="ep-title">LUKE NUKEM FOREVER</p>
+          <p>(eventually)</p>
+        </div>
+      </div>
+      <div class="victory-front"><p>Click to return to the title screen</p></div>
+    </div>
+  </div>
+
+  <script src="js/audio.js"></script>
+  <script src="js/assets.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
