@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#000000">
   <title>Luke Nukem 3D</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -26,6 +29,16 @@
       <div class="box"><div class="lbl">Kills</div><div class="val small" id="h-kills">0/0</div></div>
     </div>
 
+    <div id="touch">
+      <div id="stick"><div id="knob"></div></div>
+      <button id="t-fire" class="tbtn fire">FIRE</button>
+      <button id="t-use" class="tbtn">USE</button>
+      <button id="t-force" class="tbtn">FORCE</button>
+      <button id="t-weapon" class="tbtn">WEAPON</button>
+      <button id="t-map" class="tbtn small">MAP</button>
+      <button id="t-pause" class="tbtn small">&#10074;&#10074;</button>
+    </div>
+
     <div id="screen-title" class="screen">
       <div class="crawl-wrap">
         <div class="crawl" id="title-crawl">
@@ -40,8 +53,12 @@
       <div class="title-front">
         <h1><span>LUKE</span><span>NUKEM</span><em>3D</em></h1>
         <p class="tag">A long time ago, in a galaxy far, far away... someone had to kick some Imperial ass.</p>
-        <button class="start">Click to start</button>
-        <div class="controls">
+        <button class="start"><span class="no-touch">Click to start</span><span class="only-touch">Tap to start</span></button>
+        <div class="controls only-touch">
+          <div><b>Left thumb</b> move (push all the way to run) · <b>Right thumb</b> drag to look</div>
+          <div><b>FIRE</b> hold to shoot · <b>USE</b> doors &amp; switches · <b>FORCE</b> push · <b>WEAPON</b> switch</div>
+        </div>
+        <div class="controls no-touch">
           <div><b>WASD</b> move · <b>Mouse</b> aim · <b>Shift</b> run</div>
           <div><b>Click</b> fire · <b>Right-click / F</b> Force push</div>
           <div><b>E / Space</b> use doors &amp; switches · <b>1-4 / wheel</b> weapons</div>
@@ -73,6 +90,7 @@
       <div class="victory-front"><p>Click to return to the title screen</p></div>
     </div>
   </div>
+  <div id="rotate"><div><div class="phone"></div>Turn your phone sideways to play</div></div>
 
   <script src="js/audio.js"></script>
   <script src="js/assets.js"></script>

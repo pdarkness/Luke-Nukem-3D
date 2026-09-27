@@ -32,6 +32,14 @@ Or serve the folder with any static server (for example `npx serve .`) or GitHub
 | **N** | Toggle sound |
 | **P** / Esc | Pause |
 
+### On a phone or tablet
+
+Hold the phone sideways. Tapping **Start** switches to fullscreen where the browser allows it.
+
+- **Left thumb**: a joystick appears wherever you touch. Push it all the way out to run.
+- **Right thumb**: drag anywhere to look around.
+- **FIRE** (hold), **USE**, **FORCE** and **WEAPON** buttons sit in the bottom-right corner. **MAP** and pause are in the top-right corner.
+
 ## Arsenal
 
 1. **Lightsaber**: melee with unlimited uses. Swing it at incoming blaster bolts to send them back at the shooter.
