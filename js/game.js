@@ -491,12 +491,14 @@
     if (keys.KeyS || keys.ArrowDown) fwd -= 1;
     if (keys.KeyD) str += 1;
     if (keys.KeyA) str -= 1;
-    const run = keys.ShiftLeft || keys.ShiftRight;
-    const speed = run ? 5.2 : 3.3;
+    fwd -= touch.my; str += touch.mx;
     const dx = Math.cos(p.a), dy = Math.sin(p.a);
     let mx = dx * fwd - dy * str, my = dy * fwd + dx * str;
     const ml = Math.hypot(mx, my);
-    if (ml > 0) {
+    // a joystick pushed all the way out runs, like holding Shift
+    const run = keys.ShiftLeft || keys.ShiftRight || (touch.stickId !== null && ml > 0.95);
+    const speed = (run ? 5.2 : 3.3) * Math.min(1, ml);
+    if (ml > 0.05) {
       mx /= ml; my /= ml;
       const hit = tryMove(p, p.x + mx * speed * dt, p.y + my * speed * dt, 0.25);
       if (hit && hit.x !== undefined) {
@@ -505,9 +507,9 @@
       }
       p.bob += dt * (run ? 13 : 9);
     }
-    p.moveAmt += ((ml > 0 ? 1 : 0) - p.moveAmt) * Math.min(1, dt * 8);
+    p.moveAmt += ((ml > 0.05 ? 1 : 0) - p.moveAmt) * Math.min(1, dt * 8);
 
-    if (mouseDown || keys.ControlLeft) fire();
+    if (mouseDown || keys.ControlLeft || touch.fire) fire();
 
     // pickups
     for (let i = items.length - 1; i >= 0; i--) {
@@ -1049,11 +1051,14 @@
   }
 
   // ------------------------------------------------------------ flow
+  let modeChangedAt = 0;
   function setMode(m) {
     mode = m;
+    modeChangedAt = performance.now();
     for (const el of document.querySelectorAll('.screen')) el.classList.remove('show');
     const show = id => $(id).classList.add('show');
     document.body.classList.toggle('playing', m === 'play');
+    if (m !== 'play') resetTouch();
     if (m === 'title') { show('screen-title'); Sfx.humStop(); }
     if (m === 'paused') show('screen-pause');
     if (m === 'dead') { show('screen-dead'); document.exitPointerLock?.(); }
@@ -1079,6 +1084,7 @@
 
   function startGame() {
     Sfx.init();
+    if (touch.enabled) goFullscreen();
     snapshot = null;
     loadLevel(0);
     beginPlay();
@@ -1089,6 +1095,7 @@
     lockPointer();
   }
   function lockPointer() {
+    if (touch.enabled) return;
     try { const r = canvas.requestPointerLock?.(); if (r && r.catch) r.catch(() => {}); } catch (e) { /* ignore */ }
   }
   function restartCrawl(id) {
@@ -1097,6 +1104,92 @@
     void el.offsetWidth;
     el.style.animation = '';
   }
+
+  // ------------------------------------------------------------ touch controls
+  // Left side of the screen: a floating joystick that appears under the
+  // thumb. Right side: drag to look. Buttons handle everything else.
+  const touch = { enabled: false, mx: 0, my: 0, fire: false, stickId: null, lookId: null, sx: 0, sy: 0, lx: 0 };
+  const touchLayer = $('touch'), stick = $('stick'), knob = $('knob');
+
+  function enableTouch() {
+    if (touch.enabled) return;
+    touch.enabled = true;
+    document.body.classList.add('touch');
+  }
+  if (window.matchMedia?.('(pointer: coarse)').matches) enableTouch();
+  document.addEventListener('pointerdown', e => { if (e.pointerType === 'touch') enableTouch(); }, true);
+
+  function resetTouch() {
+    touch.mx = touch.my = 0; touch.fire = false; touch.stickId = touch.lookId = null;
+    stick.classList.remove('on');
+    for (const el of touchLayer.querySelectorAll('.tbtn')) el.classList.remove('down');
+  }
+  function goFullscreen() {
+    const el = document.documentElement;
+    try {
+      const r = el.requestFullscreen?.({ navigationUI: 'hide' });
+      if (r && r.then) r.then(() => screen.orientation?.lock?.('landscape').catch(() => {})).catch(() => {});
+    } catch (e) { /* not supported (e.g. iPhone Safari) */ }
+  }
+
+  touchLayer.addEventListener('pointerdown', e => {
+    if (mode !== 'play') return;
+    e.preventDefault();
+    const r = touchLayer.getBoundingClientRect();
+    if (e.clientX - r.left < r.width * 0.45 && touch.stickId === null) {
+      touch.stickId = e.pointerId; touch.sx = e.clientX; touch.sy = e.clientY;
+      stick.style.left = (e.clientX - r.left) + 'px';
+      stick.style.top = (e.clientY - r.top) + 'px';
+      knob.style.transform = '';
+      stick.classList.add('on');
+    } else if (touch.lookId === null) {
+      touch.lookId = e.pointerId; touch.lx = e.clientX;
+    } else return;
+    try { touchLayer.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+  });
+  touchLayer.addEventListener('pointermove', e => {
+    if (mode !== 'play') return;
+    const r = touchLayer.getBoundingClientRect();
+    if (e.pointerId === touch.stickId) {
+      const max = r.width * 0.07;
+      let dx = e.clientX - touch.sx, dy = e.clientY - touch.sy;
+      const d = Math.hypot(dx, dy);
+      if (d > max) { dx *= max / d; dy *= max / d; }
+      touch.mx = dx / max; touch.my = dy / max;
+      knob.style.transform = `translate(${dx}px, ${dy}px)`;
+    } else if (e.pointerId === touch.lookId) {
+      const d = (e.clientX - touch.lx) / r.width * 5.5;
+      touch.lx = e.clientX;
+      player.a += d;
+      mouseTurn += Math.abs(d);
+    }
+  });
+  function endTouch(e) {
+    if (e.pointerId === touch.stickId) { touch.stickId = null; touch.mx = touch.my = 0; stick.classList.remove('on'); }
+    if (e.pointerId === touch.lookId) touch.lookId = null;
+  }
+  touchLayer.addEventListener('pointerup', endTouch);
+  touchLayer.addEventListener('pointercancel', endTouch);
+
+  function bindButton(id, down, up) {
+    const el = $(id);
+    el.addEventListener('pointerdown', e => {
+      e.preventDefault(); e.stopPropagation();
+      el.classList.add('down');
+      if (mode === 'play') down();
+    });
+    const release = () => { if (!el.classList.contains('down')) return; el.classList.remove('down'); if (up) up(); };
+    el.addEventListener('pointerup', release);
+    el.addEventListener('pointercancel', release);
+    el.addEventListener('pointerleave', release);
+  }
+  bindButton('t-fire', () => { touch.fire = true; }, () => { touch.fire = false; });
+  bindButton('t-use', use);
+  bindButton('t-force', forcePush);
+  bindButton('t-weapon', () => cycleWeapon(1));
+  bindButton('t-map', () => { showMap = !showMap; });
+  bindButton('t-pause', () => setMode('paused'));
+  document.addEventListener('visibilitychange', () => { if (document.hidden && mode === 'play') setMode('paused'); });
 
   // ------------------------------------------------------------ input
   document.addEventListener('keydown', e => {
@@ -1137,11 +1230,16 @@
   });
   window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; mouseDown = false; });
 
-  $('screen-title').addEventListener('click', startGame);
-  $('screen-pause').addEventListener('click', () => { Sfx.init(); beginPlay(); });
-  $('screen-dead').addEventListener('click', () => { loadLevel(levelIndex); beginPlay(); });
-  $('screen-levelend').addEventListener('click', () => { loadLevel(levelIndex + 1); beginPlay(); });
-  $('screen-victory').addEventListener('click', () => setMode('title'));
+  // Ignore clicks that land right after a screen appears, e.g. the tail
+  // end of the tap on the touch pause button.
+  function onScreen(id, fn) {
+    $(id).addEventListener('click', () => { if (performance.now() - modeChangedAt > 400) fn(); });
+  }
+  onScreen('screen-title', startGame);
+  onScreen('screen-pause', () => { Sfx.init(); beginPlay(); });
+  onScreen('screen-dead', () => { loadLevel(levelIndex); beginPlay(); });
+  onScreen('screen-levelend', () => { loadLevel(levelIndex + 1); beginPlay(); });
+  onScreen('screen-victory', () => setMode('title'));
 
   // ------------------------------------------------------------ title starfield
   const stars = Array.from({ length: 300 }, () => ({ x: rand(-1, 1), y: rand(-1, 1), z: rand(0.05, 1) }));
@@ -1177,5 +1275,5 @@
   requestAnimationFrame(loop);
 
   // exposed for automated smoke tests
-  window.__luke = { get mode() { return mode; }, get player() { return player; }, get enemies() { return enemies; }, startGame, loadLevel: i => { loadLevel(i); beginPlay(); }, fire, use, forcePush, selectWeapon };
+  window.__luke = { get touch() { return touch; }, get mode() { return mode; }, get player() { return player; }, get enemies() { return enemies; }, startGame, loadLevel: i => { loadLevel(i); beginPlay(); }, fire, use, forcePush, selectWeapon };
 })();
