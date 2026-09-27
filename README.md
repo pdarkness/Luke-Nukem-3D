@@ -11,7 +11,9 @@ every texture, sprite and sound effect is generated in code at startup.
 
 ## Play
 
-Open `index.html` in a modern browser. That's it; it also works straight from `file://`.
+**▶ Play online: https://pdarkness.github.io/Luke-Nukem-3D/**
+
+Or open `index.html` in a modern browser. That's it; it also works straight from `file://`.
 Or serve the folder with any static server (for example `npx serve .`) or GitHub Pages.
 
 ## Controls
